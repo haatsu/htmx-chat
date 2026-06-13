@@ -50,15 +50,20 @@ app/
 
 ## 認証方式
 
-- ログイン時に UUID トークンを発行し、`session_token` クッキー（HttpOnly）にセット
-- トークン → ユーザ名のマッピングを `app.state.sessions: dict[str, str]` でインメモリ管理
+**ステートレス署名トークン方式**（サーバー側にセッションストアを持たない）
+
+- ログイン時に `username` を `SECRET_KEY` で署名したトークンを生成し、`session_token` クッキー（HttpOnly）にセット
+- トークン自体にユーザ名と有効期限が含まれる（`itsdangerous.URLSafeTimedSerializer` を使用）
+- リクエスト時はクッキーのトークンを検証してユーザ名を取り出す。サーバー側にセッション保存は不要
 - ホーム・チャット画面はFastAPI依存関数 `get_current_user` で認証チェックし、未認証なら `/` にリダイレクト
+
+**必要な環境変数**: `SECRET_KEY`（任意の長い乱数文字列）
 
 ## 制約・方針
 
 - SSE は GET のみ対応・HTMX は Fetch API 非対応のため、チャットのストリーミング送受信は **JS（Fetch API）で実装する**
 - その他の画面遷移・フォーム送信は HTMX を使う
-- Jinja2 テンプレートを使うため `uv add jinja2` で追加する（`python-multipart` は既存依存）
+- Jinja2 テンプレートを使うため `uv add jinja2 itsdangerous` で追加する（`python-multipart` は既存依存）
 - `app/static` 配下のベンダーファイル（HTMX・Alpine.js）とCSSをテンプレートから参照するため、`main.py` の Static ファイルマウントを有効化する:
   ```python
   app.mount("/static", StaticFiles(directory="app/static"), name="static")
