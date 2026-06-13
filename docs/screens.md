@@ -1,5 +1,11 @@
 # 画面仕様
 
+## テンプレート継承・HTMXパーシャル・render()・エラーページ
+
+→ `design-patterns.md` を参照。
+
+---
+
 ## 共通：サイドバー（`_sidebar.html`）
 
 ホーム・チャット画面の両方で `{% include "_sidebar.html" %}` として使う。
@@ -18,17 +24,32 @@
 
 ---
 
+## 認証済みルーターの共通パターン
+
+各認証済み画面ファイルは独立したルーターを持つ。  
+ルーターレベルで `get_current_user` を適用し、`render()` ヘルパーでテンプレートを返す。
+
+```python
+from fastapi import APIRouter, Depends, Request
+from app.core.auth import get_current_user
+from app.core.templates import render
+
+router = APIRouter(dependencies=[Depends(get_current_user)])
+```
+
+`username` と `hx_request` は `render()` が自動付与するため、ルートハンドラでは宣言不要。
+
+---
+
 ## ホーム画面（`GET /home`）
 
 **ファイル**: `app/routers/home.py`、`app/templates/home.html`
 
-**認証**: `get_current_user` 依存関数で必須
-
 **エンドポイント**:
 ```python
 @router.get("/home")
-async def home(request: Request, username: str = Depends(get_current_user)):
-    return TemplateResponse("home.html", {"request": request, "username": username, "active_page": "home"})
+async def home(request: Request):
+    return render(request, "home.html", {"active_page": "home"})
 ```
 
 **画面レイアウト**:
@@ -42,19 +63,15 @@ async def home(request: Request, username: str = Depends(get_current_user)):
 
 ## チャット画面（`GET /chat-ui`）
 
-**ファイル**: `app/routers/home.py`（認証済みHTML画面はすべてここに集約）、`app/templates/chat_ui.html`
-
-**認証**: `get_current_user` 依存関数で必須
+**ファイル**: `app/routers/chat_ui.py`（画面ごとにルーターファイルを分ける）、`app/templates/chat_ui.html`
 
 **エンドポイント**:
 ```python
 @router.get("/chat-ui")
-async def chat_ui(request: Request, username: str = Depends(get_current_user)):
-    return TemplateResponse("chat_ui.html", {
-        "request": request,
-        "username": username,
+async def chat_ui(request: Request):
+    return render(request, "chat_ui.html", {
         "active_page": "chat",
-        "thread_id": request.cookies.get("session_token"),  # スレッドIDはセッショントークンを流用
+        "thread_id": request.cookies.get("session_token"),
     })
 ```
 
