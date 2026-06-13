@@ -1,0 +1,22 @@
+<aside class="w-64 bg-base-200 flex flex-col p-4 gap-2 shrink-0">
+  <div class="text-xl font-bold px-2 py-3">htmx-chat</div>
+  <nav class="flex flex-col gap-1">
+    <a href="/home"
+       hx-get="/home"
+       hx-target="#main"
+       hx-swap="innerHTML"
+       hx-push-url="true"
+       class="btn btn-ghost justify-start {% if active_page == 'home' %}btn-active{% endif %}">
+      ホーム
+    </a>
+    <a href="/chat-ui"
+       hx-get="/chat-ui"
+       hx-target="#main"
+       hx-swap="innerHTML"
+       hx-push-url="true"
+       class="btn btn-ghost justify-start {% if active_page == 'chat' %}btn-active{% endif %}">
+      チャット
+    </a>
+  </nav>
+  <div class="mt-auto px-2 text-sm text-base-content/60">{{ username }}</div>
+</aside>

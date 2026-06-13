@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}htmx-chat{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.min.css">
+  <script src="/static/css/daisyui.js"></script>
+  <script src="/static/vendor/alpinemin.js" defer></script>
+  <script src="/static/vendor/htmx.min.js" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body class="bg-base-100 text-base-content">
+  {% block body %}{% endblock %}
+</body>
+</html>

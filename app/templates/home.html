@@ -1,0 +1,18 @@
+{% extends "_app_layout.html" if not hx_request else "_partial_base.html" %}
+{% block title %}ホーム{% endblock %}
+{% block main %}
+<div class="p-8 flex flex-col gap-6 max-w-2xl">
+  <div>
+    <h1 class="text-3xl font-bold">htmx-chat</h1>
+    <p class="mt-2 text-base-content/70">こんにちは、{{ username }} さん</p>
+  </div>
+  <a href="/chat-ui"
+     hx-get="/chat-ui"
+     hx-target="#main"
+     hx-swap="innerHTML"
+     hx-push-url="true"
+     class="btn btn-primary w-fit">
+    チャットを始める
+  </a>
+</div>
+{% endblock %}
