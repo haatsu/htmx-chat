@@ -32,6 +32,7 @@ app/
     home.py          # GET /home・GET /chat-ui（認証済みHTML画面）
     chat.py          # 既存（/chat, /chat/form）＋ POST /chat/stream を追加
   templates/
+    _base.html       # 全画面共通の<html>/<head>/CSS/JS（継承元）
     login.html       # ログイン画面
     home.html        # ホーム画面
     chat_ui.html     # チャット画面

@@ -1,5 +1,40 @@
 # 画面仕様
 
+## ベーステンプレート（`_base.html`）
+
+全テンプレートが継承する共通レイアウト。`<html>`・`<head>`・CSSインポート・JSインポートをここにのみ書く。
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}htmx-chat{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.min.css">
+  <script src="/static/vendor/alpinemin.js" defer></script>
+  <script src="/static/vendor/htmx.min.js" defer></script>
+</head>
+<body>
+  {% block body %}{% endblock %}
+</body>
+</html>
+```
+
+各画面テンプレートはこれを継承する:
+
+```html
+{% extends "_base.html" %}
+
+{% block title %}ホーム{% endblock %}
+
+{% block body %}
+  <!-- ページ固有のHTML -->
+{% endblock %}
+```
+
+---
+
 ## 共通：サイドバー（`_sidebar.html`）
 
 ホーム・チャット画面の両方で `{% include "_sidebar.html" %}` として使う。
@@ -18,17 +53,43 @@
 
 ---
 
+## `home.py` ルーターの構成
+
+認証済みHTML画面はすべて `app/routers/home.py` に集約する。  
+ルーターレベルで `get_current_user` を適用し、配下の全ルートを自動的に認証必須にする。
+
+```python
+from fastapi import APIRouter, Depends, Request
+from app.core.auth import get_current_user
+from app.core.templates import templates
+
+router = APIRouter(dependencies=[Depends(get_current_user)])
+```
+
+個別ルートで `username` が必要な場合は同じ依存関数を再度宣言する。  
+FastAPI はリクエスト内で同一依存関数の結果をキャッシュするため、**実際の呼び出しは1回**。
+
+```python
+@router.get("/home")
+async def home(request: Request, username: str = Depends(get_current_user)):
+    ...
+```
+
+---
+
 ## ホーム画面（`GET /home`）
 
 **ファイル**: `app/routers/home.py`、`app/templates/home.html`
-
-**認証**: `get_current_user` 依存関数で必須
 
 **エンドポイント**:
 ```python
 @router.get("/home")
 async def home(request: Request, username: str = Depends(get_current_user)):
-    return TemplateResponse("home.html", {"request": request, "username": username, "active_page": "home"})
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "username": username,
+        "active_page": "home",
+    })
 ```
 
 **画面レイアウト**:
@@ -44,13 +105,11 @@ async def home(request: Request, username: str = Depends(get_current_user)):
 
 **ファイル**: `app/routers/home.py`（認証済みHTML画面はすべてここに集約）、`app/templates/chat_ui.html`
 
-**認証**: `get_current_user` 依存関数で必須
-
 **エンドポイント**:
 ```python
 @router.get("/chat-ui")
 async def chat_ui(request: Request, username: str = Depends(get_current_user)):
-    return TemplateResponse("chat_ui.html", {
+    return templates.TemplateResponse("chat_ui.html", {
         "request": request,
         "username": username,
         "active_page": "chat",
