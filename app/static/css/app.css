@@ -1,0 +1,4 @@
+/* app/static/css/app.css */
+@import "tailwindcss";
+@plugin "./daisyui.js";
+@source "../../templates";
