@@ -93,6 +93,9 @@ async def launch(request: Request, username: str = Form(..., min_length=1)):
 FastAPI の依存関数から直接 `RedirectResponse` を raise しても動かないため、
 カスタム例外クラスを定義し、`main.py` の `exception_handler` で処理する。
 
+認証成功時は `request.state.user` にユーザ名をセットする。
+これにより `render()` ヘルパー（`app/core/templates.py`）が自動でユーザ名を取得できる。
+
 ```python
 from fastapi import Request
 
@@ -104,6 +107,7 @@ def get_current_user(request: Request) -> str:
     if token:
         username = request.app.state.sessions.get(token)
         if username:
+            request.state.user = username  # render()から参照するためにセット
             return username
     raise RequiresLoginException()
 ```
