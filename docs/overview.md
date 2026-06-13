@@ -24,10 +24,13 @@
 
 ```
 app/
+  core/
+    auth.py          # 認証依存関数・RequiresLoginException（新規）
+    templates.py     # Jinja2Templates シングルトン（新規）
   routers/
-    launch.py        # ログイン・認証エンドポイント
-    home.py          # ホーム画面エンドポイント
-    chat.py          # 既存（/chat, /chat/form）＋ /chat/stream を追加
+    launch.py        # GET / （ログイン画面）・POST /launch（認証）
+    home.py          # GET /home・GET /chat-ui（認証済みHTML画面）
+    chat.py          # 既存（/chat, /chat/form）＋ POST /chat/stream を追加
   templates/
     login.html       # ログイン画面
     home.html        # ホーム画面
@@ -45,4 +48,9 @@ app/
 
 - SSE は GET のみ対応・HTMX は Fetch API 非対応のため、チャットのストリーミング送受信は **JS（Fetch API）で実装する**
 - その他の画面遷移・フォーム送信は HTMX を使う
-- Jinja2 テンプレートを使うため、`python-multipart` は既存依存、`jinja2` を `uv add jinja2` で追加する
+- Jinja2 テンプレートを使うため `uv add jinja2` で追加する（`python-multipart` は既存依存）
+- `app/static` 配下のベンダーファイル（HTMX・Alpine.js）とCSSをテンプレートから参照するため、`main.py` の Static ファイルマウントを有効化する:
+  ```python
+  app.mount("/static", StaticFiles(directory="app/static"), name="static")
+  ```
+  （現在コメントアウトされているので外す）

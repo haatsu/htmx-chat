@@ -42,7 +42,7 @@ async def home(request: Request, username: str = Depends(get_current_user)):
 
 ## チャット画面（`GET /chat-ui`）
 
-**ファイル**: `app/routers/home.py` または `app/routers/chat.py` に追加、`app/templates/chat_ui.html`
+**ファイル**: `app/routers/home.py`（認証済みHTML画面はすべてここに集約）、`app/templates/chat_ui.html`
 
 **認証**: `get_current_user` 依存関数で必須
 
