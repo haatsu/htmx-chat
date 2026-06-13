@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 パッケージ管理には `uv` を使用する。
 
 ```bash
-# エージェントを実行
-uv run python main.py
+# 開発サーバー起動（ホットリロード有効）
+uv run python run.py
 
 # リント（構文チェック）
 uv run ruff check .
@@ -25,33 +25,72 @@ uv add <package>
 
 ## 環境変数
 
-実行前に以下の環境変数が必要:
+`.env` ファイルに以下を設定する（pydantic-settings が自動で読み込む）:
 
 - `GOOGLE_API_KEY` — Google AI Studio で発行した Gemini API キー
+- `DEFAULT_MODEL` — 省略時は `gemini-2.5-flash`
 
 ## アーキテクチャ
 
-### 現在の構成
+### ディレクトリ構成
 
-`main.py` 単体で完結した LangChain エージェント。LLM として Google Gemini（`gemini-2.0-flash`）を使用し、LangChain Hub から ReAct プロンプト（`hwchase17/react`）を取得してエージェントを構築する。
+```
+app/
+  main.py          # FastAPI アプリのエントリポイント（create_app）
+  core/
+    config.py      # 設定管理（pydantic-settings + lru_cache）
+    ai.py          # モデル生成・キャッシュ・依存関数
+  routers/
+    chat.py        # チャットエンドポイント
+  static/
+    vendor/        # HTMX、Alpine.js（ベンダーファイル）
+    css/           # TailwindCSS、DaisyUI
+run.py             # ローカル開発用起動スクリプト（本番は gunicorn）
+```
 
-ツール:
-- `get_current_time` — 現在日時を返す
-- `calculator` — Python 式を `eval` で評価して数値計算を行う
+### モデルのライフサイクル
 
-### 今後の方向性
+起動時に `lifespan`（`app/main.py`）でデフォルトモデルを初期化し `app.state.models` に格納する。  
+`get_model`（`app/core/ai.py`）が依存関数として各エンドポイントにモデルを渡す。  
+未キャッシュのモデル名が指定された場合は初回リクエスト時に初期化してキャッシュする。
 
-依存関係に **FastAPI** と **uvicorn** が含まれており、HTMX を使ったチャット UI をフロントエンドに持つ Web アプリへ発展させることが想定されている。
+```python
+# ルーターでの使い方
+from app.core.ai import get_model
+
+@router.post("/example")
+async def example(model=Depends(get_model)):
+    agent = create_agent(model=model, ...)
+```
+
+モデル切替はクエリパラメータで行う:
+
+```
+POST /chat?model_name=gemini-2.0-flash
+```
+
+### エンドポイント
+
+| パス | メソッド | 形式 | 用途 |
+|---|---|---|---|
+| `/chat` | POST | JSON (`{"message": "..."}`) | APIクライアント向け |
+| `/chat/form` | POST | Form (`message=...`) | HTMX向け（デフォルト形式） |
+| `/healthz` | GET | — | 死活監視 |
+
+### フロントエンド
+
+HTMX + Alpine.js + TailwindCSS + DaisyUI を使用。  
+HTMX はデフォルトでフォーム形式（`application/x-www-form-urlencoded`）で送信するため、`/chat/form` を使う。  
+JSONで送る場合は `hx-ext="json-enc"` が必要。
 
 ### `create_agent` の使い方
 
-現行コードは旧形式 `create_agent(llm, tools, prompt)` を使用しているが、推奨形式はキーワード引数を使った新形式:
-
 ```python
-# 推奨
+from langchain.agents import create_agent
+
 agent = create_agent(
-    model="google:gemini-2.0-flash",
+    model=model,  # init_chat_model が返すインスタンス
     tools=[get_current_time, calculator],
-    system_prompt="...",
+    system_prompt="You are a helpful assistant. Answer in the same language as the user.",
 )
 ```
