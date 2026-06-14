@@ -1,0 +1,9 @@
+{% extends "_base.html" %}
+{% block body %}
+<div class="flex h-screen">
+  {% include "_sidebar.html" %}
+  <main id="main" class="flex-1 overflow-auto">
+    {% block main %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

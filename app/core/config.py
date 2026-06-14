@@ -7,6 +7,7 @@ class Settings(BaseSettings):
 
     google_api_key: str
     default_model: str = "gemini-2.5-flash"
+    secret_key: str
 
 
 @lru_cache
