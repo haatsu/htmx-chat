@@ -1,0 +1,18 @@
+{% extends "_app_layout.html" if not hx_request else "_partial_base.html" %}
+{% block title %}チャット{% endblock %}
+{% block main %}
+<div id="chat-app" data-thread-id="{{ thread_id }}" class="flex flex-col h-full">
+  <div id="messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2"></div>
+  <div class="border-t border-base-300 p-4">
+    <div class="flex gap-2 items-end">
+      <textarea
+        id="chat-input"
+        rows="1"
+        placeholder="メッセージを入力（Shift+Enterで改行）"
+        class="textarea textarea-bordered flex-1 resize-none overflow-hidden leading-relaxed"
+      ></textarea>
+      <button id="send-btn" class="btn btn-primary shrink-0">送信</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

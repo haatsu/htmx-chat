@@ -1,0 +1,22 @@
+{% extends "_base.html" %}
+{% block title %}ログイン{% endblock %}
+{% block body %}
+<div class="flex h-screen items-center justify-center">
+  <div class="card w-96 bg-base-200 shadow-xl">
+    <div class="card-body gap-6">
+      <h1 class="card-title text-2xl justify-center">htmx-chat</h1>
+      <form method="post" action="/launch" class="flex flex-col gap-4">
+        <input
+          type="text"
+          name="username"
+          required
+          placeholder="名前を入力"
+          class="input input-bordered w-full"
+          autocomplete="off"
+        />
+        <button type="submit" class="btn btn-primary w-full">ログイン</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
