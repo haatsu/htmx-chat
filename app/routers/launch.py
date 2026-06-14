@@ -16,5 +16,7 @@ async def login_page(request: Request):
 async def launch(username: str = Form(..., min_length=1)):
     token = create_token(username)
     response = RedirectResponse(url="/home", status_code=303)
-    response.set_cookie("session_token", token, httponly=True, samesite="lax", max_age=86400)
+    response.set_cookie(
+        "session_token", token, httponly=True, samesite="lax", max_age=86400
+    )
     return response
