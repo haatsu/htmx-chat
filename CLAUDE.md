@@ -28,6 +28,7 @@ uv add <package>
 `.env` ファイルに以下を設定する（pydantic-settings が自動で読み込む）:
 
 - `GOOGLE_API_KEY` — Google AI Studio で発行した Gemini API キー
+- `SECRET_KEY` — セッショントークンの署名に使用する任意の長いランダム文字列
 - `DEFAULT_MODEL` — 省略時は `gemini-2.5-flash`
 
 ## アーキテクチャ
@@ -36,15 +37,22 @@ uv add <package>
 
 ```
 app/
-  main.py          # FastAPI アプリのエントリポイント（create_app）
+  main.py          # FastAPI アプリのエントリポイント（create_app、エラーハンドラ）
   core/
     config.py      # 設定管理（pydantic-settings + lru_cache）
     ai.py          # モデル生成・キャッシュ・依存関数
+    auth.py        # トークン生成・検証・ログイン依存関数（itsdangerous）
+    templates.py   # Jinja2 テンプレートラッパー（render ヘルパー）
   routers/
-    chat.py        # チャットエンドポイント
+    launch.py      # ログイン画面・ログイン処理
+    home.py        # ホーム画面
+    chat_ui.py     # チャット UI 画面
+    chat.py        # チャット API エンドポイント
   static/
     vendor/        # HTMX、Alpine.js（ベンダーファイル）
-    css/           # TailwindCSS、DaisyUI
+    css/           # app.css（ソース）、app.min.css（ビルド済み）
+    js/            # chat.js
+  templates/       # Jinja2 テンプレート
 run.py             # ローカル開発用起動スクリプト（本番は gunicorn）
 ```
 
@@ -71,11 +79,15 @@ POST /chat?model_name=gemini-2.0-flash
 
 ### エンドポイント
 
-| パス | メソッド | 形式 | 用途 |
+| パス | メソッド | 認証 | 用途 |
 |---|---|---|---|
-| `/chat` | POST | JSON (`{"message": "..."}`) | APIクライアント向け |
-| `/chat/form` | POST | Form (`message=...`) | HTMX向け（デフォルト形式） |
-| `/healthz` | GET | — | 死活監視 |
+| `/` | GET | 不要 | ログイン画面 |
+| `/launch` | POST | 不要 | ログイン処理・Cookie 発行 |
+| `/home` | GET | 必要 | ホーム画面 |
+| `/chat-ui` | GET | 必要 | チャット UI |
+| `/chat` | POST | 必要 | チャット API（JSON） |
+| `/chat/form` | POST | 必要 | チャット API（フォーム、HTMX 向け） |
+| `/healthz` | GET | 不要 | 死活監視 |
 
 ### フロントエンド
 
