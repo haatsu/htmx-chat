@@ -5,9 +5,9 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 def render(request: Request, template_name: str, context: dict = {}) -> templates.TemplateResponse:
-    base = {
-        "request": request,
+    ctx = {
         "username": getattr(request.state, "user", None),
         "hx_request": request.headers.get("HX-Request") == "true",
+        **context,
     }
-    return templates.TemplateResponse(template_name, {**base, **context})
+    return templates.TemplateResponse(request, template_name, ctx)
